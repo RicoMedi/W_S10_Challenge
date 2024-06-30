@@ -1,16 +1,30 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const pizzaApi = createApi({
-  reducerPath: 'pizzaApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost:9009/api/pizza' }),
-  endpoints: (builder) => ({
-    getPizzas: builder.query({
-      query: () => '/history',
+  reducerPath: "pizzaApi",
+  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:9009/api/pizza" }),
+  tagTypes: ["Pizza"],
+  endpoints: (build) => ({
+    getPizzas: build.query({
+      query: () => "/history",
+      providesTags: ["Pizza"],
+    }),
+    invalidateTags: ["Pizza"],
+    createPizza: build.mutation({
+      query: (pizza) => ({
+        url: "/order",
+        body: pizza,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: ["Pizza"],
     }),
   }),
-  middleware: getDefaultMiddleware =>
+  middleware: (getDefaultMiddleware) =>
     // Adding the API middleware to the default middleware chain
     getDefaultMiddleware().concat(pizzaApi.middleware),
 });
 
-export const { useGetPizzasQuery } = pizzaApi;
+export const { useGetPizzasQuery, useCreatePizzaMutation } = pizzaApi;
