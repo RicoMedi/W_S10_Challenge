@@ -9,15 +9,11 @@ export const pizzaApi = createApi({
       query: () => "/history",
       providesTags: ["Pizza"],
     }),
-    invalidateTags: ["Pizza"],
     createPizza: build.mutation({
-      query: (pizza) => ({
+      query: (order) => ({
         url: "/order",
-        body: pizza,
+        body: order,
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
       }),
       invalidatesTags: ["Pizza"],
     }),

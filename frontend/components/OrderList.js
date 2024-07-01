@@ -22,7 +22,8 @@ export default function OrderList() {
         {filteredOrders?.map((order) => (
           <li key={order.id}>
             <div>
-              {order.customer} ordered a {order.size} pizza with {order.toppings.length} toppings
+            {order.customer} ordered a size {order.size} with {order.toppings?.length || "no"} topping{order.toppings?.length !== 1 && 's'}
+
             </div>
           </li>
         ))}

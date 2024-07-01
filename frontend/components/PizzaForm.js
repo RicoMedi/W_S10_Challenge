@@ -1,98 +1,86 @@
-import React from 'react';
-import { useCreatePizzaMutation } from '../state/pizzaApi';
-import { useReducer } from 'react';
+import React, { useReducer } from "react";
+import { useCreatePizzaMutation } from "../state/pizzaApi";
 
 const initialFormState = {
-  fullName: '',
-  size: '',
-  toppings: [], // Array to store selected topping IDs
+  fullName: "",
+  size: "",
+  '1': false,
+  '2': false,
+  '3': false,
+  '4': false,
+  '5': false,
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
-    case 'SET_FULL_NAME':
-      return { ...state, fullName: action.payload };
-    case 'SET_SIZE':
-      return { ...state, size: action.payload };
-    case 'SET_TOPPING': {
-      const toppingId = action.payload;
-      const toppingsSet = new Set(state.toppings);
-
-      if (toppingsSet.has(toppingId)) {
-        toppingsSet.delete(toppingId);
-      } else {
-        toppingsSet.add(toppingId);
-      }
-
-      return {
-        ...state,
-        toppings: Array.from(toppingsSet),
-      };
+    case "formChange": {
+      const { name, value } = action.payload;
+      return { ...state, [name]: value };
     }
-    case 'RESET_FORM':
+    case "RESET_FORM":
       return initialFormState;
     default:
       return state;
   }
 };
 
-
 export default function PizzaForm() {
-  const [state, dispatch] = useReducer(reducer, initialFormState);
-  const [createPizza] = useCreatePizzaMutation();
+  const [form, dispatch] = useReducer(reducer, initialFormState);
+  const [createPizza, { isLoading, error }] = useCreatePizzaMutation();
 
-  const onNameChange = ({ target: { value } }) => {
-    dispatch({ type: 'SET_FULL_NAME', payload: value });
+  const onChange = (evt) => {
+    let { name, value, type, checked } = evt.target;
+    let newValues = type === "checkbox" ? checked : value;
+    dispatch({ type: "formChange", payload: { name, value: newValues} });
   };
 
-  const onSizeChange = ({ target: { value } }) => {
-    dispatch({ type: 'SET_SIZE', payload: value });
-  };
-
-  const onToppingChange = (e) => {
-    const toppingId = parseInt(e.target.value, 10);
-    dispatch({ type: 'SET_TOPPING', payload: toppingId });
-  };
-
-  const resetForm = () => {
-    dispatch({ type: 'RESET_FORM' });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { fullName, size, toppings } = state;
-    createPizza({ fullName, size, toppings });
-    resetForm();
-  };
+  const onSubmit = evt => {
+    evt.preventDefault()
+    let { fullName, size, ...toppingsSelection } = form
+    let toppings = []
+    for (let key in toppingsSelection) {
+      if (toppingsSelection[key]) toppings.push(key)
+    }
+    let requestBody = { fullName, size, toppings }
+   createPizza(requestBody)
+      .unwrap()
+      .then(() => { dispatch({ type: 'RESET_FORM' }) })
+      .catch(() => { })
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmit}>
       <h2>Pizza Form</h2>
-
+      {isLoading && <div className="pending">Order in progress...</div>}
+      {error && (
+        <div className="failure">Order failed: {error.data.message}</div>
+      )}
       <div className="input-group">
         <div>
-          <label htmlFor="fullName">Full Name</label><br />
+          <label htmlFor="fullName">Full Name</label>
+          <br />
           <input
             data-testid="fullNameInput"
             id="fullName"
             name="fullName"
             placeholder="Type full name"
             type="text"
-            onChange={onNameChange}
-            value={state.fullName}
+            onChange={onChange}
+            value={form.fullName}
           />
         </div>
       </div>
 
       <div className="input-group">
         <div>
-          <label htmlFor="size">Size</label><br />
+          <label htmlFor="size">Size</label>
+          <br />
           <select
             data-testid="sizeSelect"
             id="size"
             name="size"
-            onChange={onSizeChange}
-            value={state.size}
+            onChange={onChange}
+            value={form.size}
           >
             <option value="">----Choose size----</option>
             <option value="S">Small</option>
@@ -106,57 +94,57 @@ export default function PizzaForm() {
         <label>
           <input
             data-testid="checkPepperoni"
-            name="Pepperoni"
+            name="1"
             type="checkbox"
-            value="1"
-            onChange={onToppingChange}
-            checked={state.toppings.includes(1)}
+            onChange={onChange}
+            checked={form['1']}
           />
-          Pepperoni<br />
+          Pepperoni
+          <br />
         </label>
         <label>
           <input
             data-testid="checkGreenpeppers"
-            name="Green Peppers"
+            name="2"
             type="checkbox"
-            value="2"
-            onChange={onToppingChange}
-            checked={state.toppings.includes(2)}
+            onChange={onChange}
+            checked={form['2']}
           />
-          Green Peppers<br />
+          Green Peppers
+          <br />
         </label>
         <label>
           <input
             data-testid="checkPineapple"
-            name="Pineapple"
+            name="3"
             type="checkbox"
-            value="3"
-            onChange={onToppingChange}
-            checked={state.toppings.includes(3)}
+            onChange={onChange}
+            checked={form['3']}
           />
-          Pineapple<br />
+          Pineapple
+          <br />
         </label>
         <label>
           <input
             data-testid="checkMushrooms"
-            name="Mushrooms"
+            name="4"
             type="checkbox"
-            value="4"
-            onChange={onToppingChange}
-            checked={state.toppings.includes(4)}
+            onChange={onChange}
+            checked={form['4']}
           />
-          Mushrooms<br />
+          Mushrooms
+          <br />
         </label>
         <label>
           <input
             data-testid="checkHam"
-            name="Ham"
+            name="5"
             type="checkbox"
-            value="5"
-            onChange={onToppingChange}
-            checked={state.toppings.includes(5)}
+            onChange={onChange}
+            checked={form['5']}
           />
-          Ham<br />
+          Ham
+          <br />
         </label>
       </div>
 
